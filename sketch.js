@@ -4,6 +4,10 @@ const k = 10;
 let model;
 let cnv;
 
+async function loadMyModel() {
+  model = await tf.loadLayersModel('model/model.json');
+  model.summary();
+}
 
 function setup() {
   loadMyModel();
