@@ -26,6 +26,7 @@ function setup() {
     select('#res').html('');
   });
 }
+console.log("Howdy");
 
 function guess() {
   // Get input image from the canvas
@@ -66,6 +67,7 @@ function getInputImage() {
     oneRow.push(onePix);
     if (oneRow.length === 28) {
       inputs.push(oneRow);
+      console.log(oneRow);
       oneRow = [];
     }
   }
