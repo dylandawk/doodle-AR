@@ -18,7 +18,7 @@ const crypto = require("crypto");
 
 // image manipulation
 const PNG = require("png-js");
-
+const {promisify} = require("util");
 const port = process.env.PORT || 3000;
 const app = express();
 
@@ -57,6 +57,7 @@ loadMyModel();
 function guess(path) {
     // Get input from upload image
     const inputs =  getInputImage(path);
+
     // // Predict
     // let guess = model.predict(tf.tensor([inputs]));
   
@@ -77,28 +78,66 @@ function guess(path) {
     // });
 }
 
-function getInputImage(path) {
+const decode = promisify(PNG.decode);
+
+async function getInputImage(path){
+    
     let inputs = [];
-    // read png into a 1d array (in rgba order) of decoded pixel data
-    let results = PNG.decode(path, function(pixels) {
-        // Group data into [[[i00] [i01], [i02], [i03], ..., [i027]], .... [[i270], [i271], ... , [i2727]]]]
-        let oneRow = [];
-        for (let i = 0; i < IMAGE_SIZE; i++) {
-            let bright = pixels[i * 4];
-            let onePix = [parseFloat((255 - bright) / 255)];
-            oneRow.push(onePix);
-            if (oneRow.length === 28) {
-                inputs.push(oneRow);
-                oneRow = [];
+    var promiseInput = new Promise(async function(resolve, reject){
+        decode(path, function(pixels){
+            let oneRow = [];
+            for (let i = 0; i < IMAGE_SIZE; i++) {
+                let bright = pixels[i * 4];
+                let onePix = [parseFloat((255 - bright) / 255)];
+                oneRow.push(onePix);
+                if (oneRow.length === 28) {
+                    inputs.push(oneRow);
+                    oneRow = [];
+                }
             }
+            //console.log(inputs);
+        });
+        console.log("here");
+        if(inputs != []){
+            resolve(inputs);
+        } else {
+            reject(Error("error"))
         }
-        console.log(inputs);
-        return inputs;
     });
-    console.log(results);
-    return results;
+
+    promiseInput.then(function(results){
+        console.log("Success" + results);
+    }).catch(function(err){
+        console.log(err);
+    });
+
 }
-  
+
+// let getInputImage = new Promise((resolve, reject) => {
+    
+//     let results = PNG.decode(testPath, function(pixels){
+//         let inputs = [];
+//         let oneRow = [];
+//         for (let i = 0; i < IMAGE_SIZE; i++) {
+//             let bright = pixels[i * 4];
+//             let onePix = [parseFloat((255 - bright) / 255)];
+//             oneRow.push(onePix);
+//             if (oneRow.length === 28) {
+//                 inputs.push(oneRow);
+//                 oneRow = [];
+//             }
+//         }
+//         return inputs;
+//     });
+//     console.log(results);
+//     if(results){
+//         resolve(results);
+//     } else {
+//         reject("Failed");
+//     }
+// })
+
+
 
 
 app.get("/", async (req,res) =>{
